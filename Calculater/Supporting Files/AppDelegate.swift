@@ -7,15 +7,22 @@
 //
 
 import UIKit
+import Firebase
+import UserNotifications
+
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    let notification = UNUserNotificationCenter.current()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        FirebaseApp.configure()
+        requestAutorization()
+
         return true
     }
 
@@ -34,13 +41,52 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        UIApplication.shared.applicationIconBadgeNumber = 0
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
+    
+    func requestAutorization()
+    {
+        notification.requestAuthorization(options: [.alert, .sound, .badge], completionHandler: { (granted, error) in
+            guard granted else {return}
+            self.getNotificationSettings()
+            
+        })
+    }
 
-
+    func getNotificationSettings()
+    {
+        notification.getNotificationSettings {(settings) in
+        }
+    }
+    
+    func sceduleNotification(notificationType: String)
+    {
+        let content = UNMutableNotificationContent()
+        content.title = "Its important"
+        content.body  = "Hey, buddy " + notificationType
+        content.sound = UNNotificationSound.default
+        content.badge = 1
+        
+        var dateComponents = DateComponents()
+        dateComponents.hour = Int(18)
+        dateComponents.minute = Int(00)
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        
+        let identifire = "Local Notification"
+        let request = UNNotificationRequest(identifier: identifire, content: content, trigger: trigger)
+        
+        notification.add(request)
+        { (error) in
+            if let error = error
+              {
+                print("Error \(error.localizedDescription)")
+            }
+        }
+    }
 }
 
